@@ -77,14 +77,13 @@ Interactive docs at `http://127.0.0.1:8000/docs`.
 
 ## Design notes
 
-**Library choice — TextBlob.**
-The brief allows TextBlob, NLTK, or Hugging Face. I chose TextBlob because:
-1. It's lightweight and runs offline with no model download.
-2. Its polarity score (`-1.0` to `+1.0`) is interpretable and easy to threshold for a 3-class output.
-3. Its known weaknesses on sarcasm and complex negation make it a useful subject for the error-analysis section of this assignment.
+**Library choice - TextBlob.**
+The brief allows TextBlob, NLTK, or Hugging Face. I chose TextBlob because I wanted something simple, lightweight, and easy to explain. It runs locally without needing a large model download, and the polarity score is easy to inspect when looking at why a sentence was classified a certain way. For a small take-home project, that felt like a practical choice.
+
+I also liked that TextBlob works well as a baseline. It handles straightforward positive and negative sentences reasonably well, but it also has obvious weaknesses on things like sarcasm and more complex negation. That made it useful not only for building the classifier, but also for writing a more honest error analysis.
 
 **Mapping polarity to 3 classes.**
-TextBlob outputs a continuous polarity score, not a class. I map it with a `±0.05` deadband around zero (a convention also used by VADER) so that near-zero, factually-stated sentences land in `Neutral` rather than being forced into `Positive`/`Negative`.
+TextBlob outputs a continuous polarity score instead of a final class label, so I added a small `+/-0.05` neutral band around zero. My reasoning was that sentences close to zero should usually be treated as `Neutral` instead of being forced into `Positive` or `Negative`, especially when they are more factual or only mildly opinionated.
 
 ```
 polarity >  +0.05  -> Positive
@@ -93,10 +92,10 @@ otherwise          -> Neutral
 ```
 
 **Input validation.**
-`analyze()` raises `InvalidInputError` (a subclass of `ValueError`) for non-string input or for empty/whitespace-only strings. The CLI exits with code `2` on validation failure; the API returns HTTP `400`.
+I added explicit validation so the function fails clearly on bad input. `analyze()` raises `InvalidInputError` for non-string input and for empty or whitespace-only strings. The CLI exits with code `2` on validation failure, and the API returns HTTP `400`.
 
 **Results.**
-On the 12-sentence eval set the model scored **10/12 (83.3%)**. Both failures are well-known limitations of lexicon-based sentiment — see `results.md` for the analysis.
+On the 12-sentence evaluation set the model scored **10/12 (83.3%)**. The two incorrect predictions were on sarcasm and double-negation, which are both cases where a simple lexicon-based approach struggles. I explain those mistakes in more detail in `results.md`.
 
 ---
 
